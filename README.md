@@ -7,5 +7,6 @@ easyFileCrypt is a BASH script, which uses OpenSSL for encryption, and whiptail 
 **Folders**: Select a folder, archive and encrypt it.
 
 # Text editors
-**Nano** (by Default), or **Vi**
+**Nano** (by Default), or **Vi**.
+
 Make sure you have both installed.
