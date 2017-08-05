@@ -1,19 +1,23 @@
 #!/bin/bash
+#!/bin/bash
 
 #Small bit of config here
 #EDITOR=nano
+#ECLevel=aes-256-cbc
+
+#SVLocation=feature unused as of v2
 
 ##
 #
-# v1
+# v2
 #
-# This is a simple text and file encryption program.
+# This is a simple text and file encryption frontend program.
 # You can encrypt and decrypt [1] text files (made within this program)...
 # [2] files, and [3] compress and encrypt archives (folders).
 #
-# This program has absolutely no warranty... things may break, so just follow along with instructions (I have made some failsafes just incase).
+# This program has absolutely no warranty... things may break, so just follow along with instructions (Some failsafes have been made, just incase).
 #
-# This program uses aes-256-ecb's encryption algorithm via the openssl command.
+# This program uses aes-256-ccb, and aes-128-cbc as encryption algorithms via the openssl command.
 #
 # Yours, BobyMCbobs of https://github.com/BobyMCbobs
 #
@@ -28,21 +32,26 @@
 #
 ##
 
+eFCPath=$(dirname $0)
+checkEditor=$(head -n 4 $eFCPath/easyFileCrypt.sh | grep EDITOR= | cut -f2 -d '=')
+progVer=$(head -n 11 $eFCPath/easyFileCrypt.sh | tail -n 1 | awk {'print $2'})
+encLvl=$(head -n 5 $eFCPath/easyFileCrypt.sh | grep ECLevel= | cut -f2 -d '=')
+SaveLocation=$(head -n 7 $eFCPath/easyFileCrypt.sh | grep SVLocation= | cut -f2 -d '=')
+TextViewer=$(head -n 6 $eFCPath/easyFileCrypt.sh | grep TextViewer= | cut -f2 -d '=')
+
 menu() {
 
-if [ -f edit-encFun.sh ]
+if [ -f edit-eFC.sh ]
 then
-	rm edit-encFun.sh
+	rm edit-eFC.sh
 fi
 
-checkEditor=$(head -n 4 easyFileCrypt.sh | grep EDITOR= | cut -f2 -d '=')
-progVer=$(head -n 8 easyFileCrypt.sh | tail -n 1 | awk {'print $2'})
-
-OPTION=$(whiptail --title "Welcome to easyFileCrypt." --menu "Please choose your option" --backtitle "using $checkEditor as text editor | easyFileCrypt $progVer" 15 60 8 \
+OPTION=$(whiptail --title "Welcome to easyFileCrypt." --menu "Please choose your option" --backtitle "easyFileCrypt $progVer | using $checkEditor as text editor | $encLvl encryption level" --nocancel 15 60 8 \
 "1" "Encrypt" \
 "2" "Decrypt" \
 "3" "Settings" \
-"4" "Exit"  3>&1 1>&2 2>&3)
+"4" "Help" \
+"5" "Exit"  3>&1 1>&2 2>&3)
 
 exitstatus=$?
 if [ $exitstatus = 0 ]
@@ -59,7 +68,11 @@ then
 	then
 		configMain
 
-	elif [ $OPTION = 5 ]
+	elif [ $OPTION  = 4 ]
+	then
+		helpMenu
+
+	elif [ $OPTION = 6 ]
 	then
 		exit
 	fi
@@ -73,7 +86,7 @@ fi
 function encryptMain() {
 #Encryption Menu
 
-OPTION=$(whiptail --title "Encrypt menu." --menu "Please choose your option" 15 60 8 \
+OPTION=$(whiptail --title "Encrypt menu." --menu "Please choose your option" --nocancel 15 60 8 \
 "1" "Make text file" \
 "2" "Use existing text file" \
 "3" "Use normal file" \
@@ -130,7 +143,7 @@ nameFile
 
 passCompare
 
-cat .encmsg.txt | openssl aes-256-cbc -a -salt -out $fileName -pass pass:$passPhrase
+cat .encmsg.txt | openssl $encLvl -a -salt -out $fileName -pass pass:$passPhrase
 rm .encmsg.txt
 
 menu
@@ -156,7 +169,7 @@ then
 	nameFile
 	passCompare
 
-	cat $findTheFile | openssl aes-256-cbc -a -salt -out $fileName -pass pass:$passPhrase
+	cat $findTheFile | openssl $encLvl -a -salt -out $fileName -pass pass:$passPhrase
 
 	whiptail --title "'$fileName' saved." --msgbox "Press OK" 8 78
 
@@ -179,7 +192,7 @@ then
         nameFile
         passCompare
 
-        openssl aes-256-cbc -a -salt -in $findTheFile -out $fileName -pass pass:$passPhrase
+        openssl $encLvl -a -salt -in $findTheFile -out $fileName -pass pass:$passPhrase
 
         whiptail --title "'$fileName' saved." --msgbox "Press OK" 8 78
 
@@ -205,7 +218,7 @@ then
 
         	whiptail --title "Compression complete" --msgbox "Press OK" 8 78
         	passCompare
-	        openssl aes-256-cbc -a -salt -in .tmparch.tar -out $fileName -pass pass:$passPhrase
+	        openssl $encLvl -a -salt -in .tmparch.tar -out $fileName -pass pass:$passPhrase
 
 		if [ -f $fileName ]
 		then
@@ -229,7 +242,7 @@ fi
 function decryptMain() {
 #Decryption Menu
 
-OPTION=$(whiptail --title "Decrypt menu." --menu "Please choose your option" 15 60 8 \
+OPTION=$(whiptail --title "Decrypt menu." --menu "Please choose your option" --nocancel 15 60 8 \
 "1" "Use text file" \
 "2" "    \-- Modify" \
 "3" "Use normal file" \
@@ -281,9 +294,7 @@ then
 		exitstatus=$?
 
 		if [ $exitstatus = 0 ]; then
-
-#			fileName=$(whiptail --inputbox "What would you like to call it?" 8 78 --title "File Name" 3>&1 1>&2 2>&3)
-			cat $findName | openssl aes-256-cbc -a -d -salt -out .tempDec -pass pass:$passPhrase
+			cat $findName | openssl $encLvl -a -d -salt -out .tempDec -pass pass:$passPhrase
 
 			if [ -f .tempDec ]
 			then
@@ -308,14 +319,7 @@ then
 				rm .tempDec
 				menu
 			fi
-		else
-        		echo
 		fi
-
-	#
-
-	else
-        	echo
 	fi
 
 
@@ -326,6 +330,7 @@ else
 fi
 
 }
+
 
 function decryptFile() {
 #decrypt a single file
@@ -338,7 +343,7 @@ then
         nameFile
         passPhrase=$(whiptail --passwordbox "Found '$findName'; Please enter the decryption key:" 8 78  --title "Decryption key" --nocancel 3>&1 1>&2 2>&3)
 
-        openssl aes-256-cbc -a -d -salt -in $findTheFile -out $fileName -pass pass:$passPhrase
+        openssl $encLvl -a -d -salt -in $findTheFile -out $fileName -pass pass:$passPhrase
 
         whiptail --title "'$fileName' has been decrypted" --msgbox "Press OK" 8 78
 
@@ -349,6 +354,7 @@ fi
 
 }
 
+
 function decryptTar() {
 #Decrypt an encrypted archive
 findTheFile=$(whiptail --inputbox "What's your encrypted archive's name?" 8 78 --title "archive name" --nocancel 3>&1 1>&2 2>&3)
@@ -357,7 +363,7 @@ if [ -f $findTheFile ]
 then
 
 	passPhrase=$(whiptail --passwordbox "Found '$findTheFile'; Please enter the decryption key:" 8 78  --title "Decryption key" --nocancel 3>&1 1>&2 2>&3)
-	openssl aes-256-cbc -d -a -salt -in $findTheFile -out .tmparch.tar -pass pass:$passPhrase
+	openssl $encLvl -d -a -salt -in $findTheFile -out .tmparch.tar -pass pass:$passPhrase
 
         if [ -f .tmparch.tar ]
         then
@@ -382,6 +388,7 @@ fi
 
 }
 
+
 function viewDecryptedText() {
 #View the text that was just decrypted
 
@@ -392,6 +399,7 @@ then
 fi
 
 }
+
 
 function modifyMain() {
 #Modify text file menu
@@ -411,9 +419,8 @@ then
 		modifyMain
 	fi
 
-        openssl aes-256-cbc -a -d -salt -in $findTheFile -out .modmsg.txt -pass pass:$passPhrase
+        openssl $encLvl -a -d -salt -in $findTheFile -out .modmsg.txt -pass pass:$passPhrase
         cat .modmsg.txt > .modmsgt.txt
-        #nano .modmsg.txt
 
 	if [ $checkEditor = "nano" ]
 	then
@@ -436,7 +443,7 @@ then
                 else
 
 			whiptail --title "'$findTheFile' modified" --msgbox "Press OK to save" 8 78
-                	openssl aes-256-cbc -a -salt -in .modmsg.txt -out .modmsg2.txt -pass pass:$passPhrase
+                	openssl $encLvl -a -salt -in .modmsg.txt -out .modmsg2.txt -pass pass:$passPhrase
 
                         cat .modmsg2.txt > $findTheFile
                         rm .modmsg*.txt
@@ -451,35 +458,166 @@ fi
 }
 
 
-function configMain() {
-#Tune up encFun.sh to how you like it
-checkEditor=$(head -n 4 easyFileCrypt.sh | grep EDITOR= | cut -f2 -d '=')
+function configMain(){
+#Config Menu
 
-if (whiptail --title "Example Dialog" --yesno "This is an example of a yes/no box." --yes-button "Nano" --no-button "Vi" 8 78)
+if [ -f edit-eFC.sh ]
+then
+        rm edit-eFC.sh
+fi
+
+configOPTION=$(whiptail --title "Config Menu" --menu "Change Settings?" --backtitle "Current Config: $checkEditor as Text Editor | $encLvl Encryption" --nocancel 25 78 16 \
+"1" "Text editor" \
+"2" "Encryption Level" \
+"3" "Return to Menu" 3>&1 1>&2 2>&3)
+
+exitstatus=$?
+if [ $exitstatus = 0 ]
+then
+	if [ $configOPTION == 1 ]
+	then
+		configTextEditor
+
+	elif [ $configOPTION == 2 ]
+	then
+		configEncryptionLevel
+
+	elif [ $configOPTION == 3 ]
+	then
+		menu
+	fi
+
+fi
+
+}
+
+
+function configEncryptionLevel() {
+#Encryption level config
+
+if (whiptail --title "Set Encryption Level" --yesno "Choose the prefered Encryption Level" --yes-button "aes-256-cbc" --no-button "aes-128-cbc" 8 78)
+then
+	if [ $encLvl = "aes-128-cbc" ]
+	then
+                echo "sed -i -e '5s/#ECLevel=aes-128-cbc/#ECLevel=aes-256-cbc/g' $eFCPath/easyFileCrypt.sh" >> edit-eFC.sh
+                echo 'whiptail --title "aes-256-cbc set" --msgbox "Press OK to continue" 8 78' >> edit-eFC.sh
+                bash edit-eFC.sh
+                rm edit-eFC.sh
+		configMain
+	else
+		configMain
+	fi
+
+else
+        if [ $encLvl = "aes-256-cbc" ]
+        then
+                echo "sed -i -e '5s/#ECLevel=aes-256-cbc/#ECLevel=aes-128-cbc/g' $eFCPath/easyFileCrypt.sh" >> edit-eFC.sh
+                echo 'whiptail --title "aes-128-cbc set" --msgbox "Press OK to continue" 8 78' >> edit-eFC.sh
+                bash edit-eFC.sh
+                rm edit-eFC.sh
+                configMain
+        else
+                configMain
+        fi
+
+
+
+fi
+}
+
+
+function configConfigLocation() {
+#Menu for where to save config - unused as of v2
+
+if (whiptail --title "Location for Config" --yesno "Where should config for easyFileCrypt be saved?" --yes-button "In easyFileCrypt" --no-button "Outside Config" 8 78)
+then
+	if [ $SaveLocation = "outsideconfig" ]
+	then
+                echo "sed -i -e '7s/#SVLocation=outsideconfig/#SVLocation=inscript/g' $eFCPath/easyFileCrypt.sh" >> edit-eFC.sh
+                echo 'whiptail --title "Config will now save in $eFCPath/easyFileCrypt.sh" --msgbox "Press OK to continue" 8 78' >> edit-eFC.sh
+                bash edit-eFC.sh
+                rm edit-eFC.sh
+		configMain
+
+	elif [ $SaveLocation = "notconfigured" ]
+	then
+		echo "sed -i -e '7s/#SVLocation=notconfigured/#SVLocation=inscript/g' $eFCPath/easyFileCrypt.sh" >> edit-eFC.sh
+                echo 'whiptail --title "Config will now save in $eFCPath/easyFileCrypt.sh" --msgbox "Press OK to continue" 8 78' >> edit-eFC.sh
+                bash edit-eFC.sh
+                rm edit-eFC.sh
+		menu
+	else
+		configMain
+	fi
+
+	if [ -f /usr/local/etc/easyFileCrypt.config ]
+	then
+		sudo rm /usr/local/etc/easyFileCrypt.config
+	fi
+
+else
+        if [ $SaveLocation = "inscript" ]
+        then
+                echo "sed -i -e '7s/#SVLocation=inscript/#SVLocation=outsideconfig/g' $eFCPath/easyFileCrypt.sh" >> edit-eFC.sh
+                echo 'whiptail --title "Config will now save in /usr/local/etc/easyFileCrypt.config" --msgbox "Press OK to continue" 8 78' >> edit-eFC.sh
+                bash edit-eFC.sh
+                rm edit-eFC.sh
+		configMain
+	elif [ $SaveLocation = "notconfigured" ]
+	then
+		echo "sed -i -e '7s/#SVLocation=notconfigured/#SVLocation=outsideconfig/g' $eFCPath/easyFileCrypt.sh" >> edit-eFC.sh
+                echo 'whiptail --title "Config will now save in /usr/local/etc/easyFileCrypt.config" --msgbox "Press OK to continue" 8 78' >> edit-eFC.sh
+                bash edit-eFC.sh
+                rm edit-eFC.sh
+		menu
+
+        else
+                configMain
+        fi
+
+	if [ ! -f /usr/local/etc/easyFileCrypt.config ]
+	then
+		sudo touch /usr/local/etc/easyFileCrypt.config
+		sudo chmod 0755 /usr/local/etc/easyFileCrypt.config
+		sudo head -n 5 easyFileCrypt.sh | tail -n 3 > /usr/local/etc/easyFileCrypt.config
+	fi
+
+fi
+
+}
+
+
+function configTextEditor() {
+#Tune up easyFileCrypt.sh to how you like it
+checkEditor=$(head -n 4 $eFCPath/easyFileCrypt.sh | grep EDITOR= | cut -f2 -d '=')
+
+if (whiptail --title "Set Text Editor" --yesno "Choose your Text Editor" --yes-button "Nano" --no-button "Vi" 8 78)
 then
 
 	if [ $checkEditor = "vi" ]
 	then
-		echo "sed -i -e '4s/#EDITOR=vi/#EDITOR=nano/g' easyFileCrypt.sh" >> edit-eFC.sh
+		echo "sed -i -e '4s/#EDITOR=vi/#EDITOR=nano/g' $eFCPath/easyFileCrypt.sh" >> edit-eFC.sh
 		echo 'whiptail --title "Nano set" --msgbox "Press OK to continue" 8 78' >> edit-eFC.sh
 		bash edit-eFC.sh
 		rm edit-eFC.sh
-		menu
+		checkEditor=$(head -n 4 $eFCPath/easyFileCrypt.sh | grep EDITOR= | cut -f2 -d '=')
+		configMain
 	else
-		menu
+		configMain
 
 	fi
 else
 
 	if [ $checkEditor = "nano" ]
 	then
-		echo "sed -i -e '4s/#EDITOR=nano/#EDITOR=vi/g' easyFileCrypt.sh" >> edit-eFC.sh
+		echo "sed -i -e '4s/#EDITOR=nano/#EDITOR=vi/g' $eFCPath/easyFileCrypt.sh" >> edit-eFC.sh
 		echo 'whiptail --title "Vi set" --msgbox "Press OK to continue" 8 78' >>  edit-eFC.sh
        	 	bash edit-eFC.sh
 		rm edit-eFC.sh
-		menu
+		checkEditor=$(head -n 4 $eFCPath/easyFileCrypt.sh | grep EDITOR= | cut -f2 -d '=')
+		configMain
 	else
-		menu
+		configMain
 
 	fi
 fi
@@ -488,20 +626,20 @@ fi
 
 function helpMenu() {
 #print help guide
-helpText="Welcome to encFun!
+helpText="Welcome to easyFileEncrypt!
 
 1. Encrypting data
-	-
-	-
-	-
+	- Text Files
+	- Regular Files
+	- Archives
 
 2. Decrypting data
-	-
-	-
-	-
+	- Text Files
+	- Regular Files
+	- Archives
 
 3. Modifying data
-	-
+	- Text Files
 	-
 	-
 
@@ -512,29 +650,15 @@ menu
 
 }
 
+
 function passCompare {
 #compare passwords to encrypt files and users type; declear passPhrase variable
 
 #1st
 passPhrase=$(whiptail --passwordbox "Please enter the encryption key:" 8 78  --title "Encryption key" 3>&1 1>&2 2>&3)
 
-#exitstatus=$?
-#if [ $exitstatus = 0 ]; then
-#        echo
-#else
-#        echo
-#fi
-
 #2nd
 passPhrase2=$(whiptail --passwordbox "Please repeat the encryption key:" 8 78  --title "Encryption key" 3>&1 1>&2 2>&3)
-
-#exitstatus=$?
-#if [ $exitstatus = 0 ]; then
-#        echo
-#else
-#        echo
-#fi
-
 
 if [ "$passPhrase" = "$passPhrase2" ]
 then
@@ -547,4 +671,27 @@ fi
 
 }
 
+function initalSetup() {
+#easyFileCrypt inital setup
+whiptail --title "Welcome to easyFileCrypt" --msgbox "Press Ok to setup" 8 78
+
+configConfigLocation
+
+}
+
+function checkRequirements() {
+#
+if [ ! -f /usr/bin/whiptail ] || [ ! -f /usr/bin/openssl ]
+then
+	if (whiptail --title "whiptail, or openssl seams not to be installed" --yesno "Do you want to install them?" 8 78)
+	then
+		sudo apt install -y whiptail openssl
+	else
+		exit
+	fi
+fi
+
+}
+
+checkRequirements
 menu
