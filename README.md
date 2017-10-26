@@ -8,6 +8,6 @@ Run within a terminal session
 **Folders**: Select a folder, archive and encrypt it.
 
 # Text editors
-**Nano** (by Default), or **Vi**.
+**Nano** (by Default), or **Vim**.
 
 Make sure you have both installed.
