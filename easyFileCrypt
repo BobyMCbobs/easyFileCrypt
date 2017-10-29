@@ -4,11 +4,11 @@
 #EDITOR=vim
 #ECLevel=aes-256-cbc
 
-#SVLocation=feature unused as of v2
+#SVLocation=feature unused as of v2*
 
 ##
 #
-# v2
+# v2.1
 #
 # This is a simple text and file encryption frontend program.
 # You can encrypt and decrypt [1] text files (made within this program)...
