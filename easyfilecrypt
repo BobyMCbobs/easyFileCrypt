@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Small bit of config here
-#EDITOR=vim
+#EDITOR=nano
 #ECLevel=aes-256-cbc
 
 #SVLocation=feature unused as of v2
