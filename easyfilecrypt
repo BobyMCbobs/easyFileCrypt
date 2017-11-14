@@ -763,7 +763,7 @@ configConfigLocation
 
 function checkRequirements() {
 #install programs that help this to run
-if [ ! -f /usr/bin/whiptail ] || [ ! -f /usr/bin/openssl ]
+if [ ! -f /usr/bin/whiptail ] && [ ! -f /usr/bin/openssl ] || [ ! -f /bin/whiptail ] || [ ! -f /usr/bin/openssl ]
 then
 	if (whiptail --title "whiptail, or openssl seams not to be installed" --yesno "Do you want to install them?" 8 78)
 	then
