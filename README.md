@@ -12,5 +12,12 @@ Text editors:
 
 Make sure you have both installed.
 
+**To install, run**:  
+  1: `git clone git://github.com/BobyMCBobs/easyfilecrypt.git`  
+  2: `sudo install -g root -o root easyfilecrypt/easyfilecrypt /usr/local/bin/easyfilecrypt;`  
+
+**Or in a single command**:  
+  `git clone git://github.com/BobyMCBobs/easyfilecrypt.git;sudo install -g root -o root easyfilecrypt/easyfilecrypt /usr/local/bin/easyfilecrypt;echo "EasyFileCrypt has been installed."`  
+
 To do:  
 - [ ] Use array to have simular values for window sizes, always  
